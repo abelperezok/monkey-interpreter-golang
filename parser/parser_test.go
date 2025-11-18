@@ -16,10 +16,10 @@ func TestLetStatements(t *testing.T) {
 	p := New(l)
 
 	program := p.ParseProgram()
+	checkParserErrors(t, p, true)
 	if program == nil {
 		t.Fatalf("ParseProgram() returned nil")
 	}
-	t.Log("Llego aqui")
 
 	if len(program.Statements) != 3 {
 		t.Fatalf("program.Statements does not contain 3 statements, got %d", len(program.Statements))
@@ -39,6 +39,19 @@ func TestLetStatements(t *testing.T) {
 			return
 		}
 	}
+}
+
+func TestLetErrors(t *testing.T) {
+	input := `
+	let x 5;
+	let = 10;
+	let 838383;
+`
+	l := lexer.New(input)
+	p := New(l)
+
+	p.ParseProgram()
+	checkParserErrors(t, p, false)
 }
 
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
@@ -64,4 +77,27 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	}
 
 	return true
+}
+
+func checkParserErrors(t *testing.T, p *Parser, fail bool) {
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+
+	if fail {
+		t.Errorf("parser has %d errors", len(errors))
+	} else {
+		t.Logf("parser has %d errors", len(errors))
+	}
+	for _, msg := range errors {
+		if fail {
+			t.Errorf("parser error: %q", msg)
+		} else {
+			t.Logf("parser error: %q", msg)
+		}
+	}
+	if fail {
+		t.FailNow()
+	}
 }
